@@ -11,6 +11,20 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "src/generated/**", // Ignore Prisma generated files
+      ".next/**",
+      "node_modules/**",
+      "dist/**",
+      "out/**"
+    ]
+  },
+  {
+  rules: {
+    'react/no-unescaped-entities': 'off'
+  }
+}
 ];
 
 export default eslintConfig;
