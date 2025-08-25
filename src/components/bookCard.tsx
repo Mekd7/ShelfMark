@@ -1,5 +1,5 @@
 "use client";
-
+//component dedicated for resuable book card only
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
