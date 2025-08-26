@@ -11,28 +11,26 @@ export default function AddBook() {
   
   const [state, formAction, isPending] = useActionState(CreateBook, initialState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hasSelectedImage, setHasSelectedImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setImagePreview(URL.createObjectURL(file));
+      setHasSelectedImage(true);
     }
   };
 
   return (
-    // On small screens, this will now scroll if content overflows.
-    // The h-screen is removed to allow natural scrolling on mobile.
     <div className="flex flex-col md:h-screen overflow-y-auto">
-      
-      {/*
-        - `flex-col`: Stacks the two panes vertically by default (for mobile).
-        - `md:flex-row`: Switches to a horizontal layout on medium screens and up.
-      */}
-      <form action={formAction} className="flex flex-col md:flex-row flex-1">
+      {/* ADDED: encType="multipart/form-data" for file uploads */}
+      <form 
+        action={formAction} 
+        className="flex flex-col md:flex-row flex-1"
+      >
         
         {/* --- Left Pane: Image Uploader --- */}
-        
         <div className="bg-apricot p-8 flex flex-col items-center justify-center min-h-[50vh] md:min-h-0 md:flex-1">
           {imagePreview ? (
             <div className="w-full max-w-[250px] sm:max-w-sm aspect-[2/3] relative">
@@ -44,7 +42,6 @@ export default function AddBook() {
               />
             </div>
           ) : (
-            // Responsive text size
             <h1 className="text-6xl md:text-8xl font-kalnia leading-tight">
               Your<br /> personal <br />literary<br /> treasury.
             </h1>
@@ -57,6 +54,7 @@ export default function AddBook() {
             onChange={handleImageChange}
             className="hidden"
             accept="image/*"
+            
           />
           
           <button 
@@ -69,29 +67,37 @@ export default function AddBook() {
             </svg>
             {imagePreview ? 'Change Cover' : 'Add Book Cover'}
           </button>
+
+          {/* ADDED: Visual feedback about image selection */}
+          {!hasSelectedImage && (
+            <p className="text-sm text-gray-600 mt-2 text-center">
+              (Optional: Add a book cover image)
+            </p>
+          )}
         </div>
 
-        
         <div className="flex-1 bg-white p-8 sm:p-12 md:px-24 mt-24 flex flex-col justify-center">
           
           {/* Book Name */}
           <div>
-            <label className="flex flex-col text-xl font-semibold mb-2">Book Name</label>
+            <label className="flex flex-col text-xl font-semibold mb-2">Book Name *</label>
             <input
               type="text"
-              name="book name"
+              name="book name" // This should match exactly what server expects
               className="w-full bg-transparent border-b-2 border-black focus:outline-none focus:border-gray-500 text-base font-normal mt-2 pb-1"
+              required
             />
             {state?.errors.bookName && <p className="text-red-500 text-sm mt-1">{state.errors.bookName}</p>}
           </div>
 
           {/* Author Name */}
           <div className="mt-10">
-            <label className="flex flex-col text-xl font-semibold mb-2">Author Name</label>
+            <label className="flex flex-col text-xl font-semibold mb-2">Author Name *</label>
             <input
               type="text"
-              name="author name"
+              name="author name" // This should match exactly what server expects
               className="w-full bg-transparent border-b-2 border-black focus:outline-none focus:border-gray-500 text-base font-normal mt-2 pb-1"
+              required
             />
             {state?.errors.authorName && <p className="text-red-500 text-sm mt-1">{state.errors.authorName}</p>}
           </div>
@@ -99,18 +105,34 @@ export default function AddBook() {
           {/* Status Radio Buttons */}
           <div className="mt-10">
             <div className="flex flex-col">
-              <label className="text-xl mb-4 font-semibold">Status</label>
+              <label className="text-xl mb-4 font-semibold">Status *</label>
               <div className="flex flex-col gap-y-3 pl-8">
                 <label className="flex items-center gap-x-3 text-[18px] cursor-pointer">
-                  <input type="radio" name="book status" value="TO_READ" className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"/>
+                  <input 
+                    type="radio" 
+                    name="book status" // This should match exactly what server expects
+                    value="TO_READ" 
+                    className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                    required
+                  />
                   To Read
                 </label>
                 <label className="flex items-center gap-x-3 text-[18px] cursor-pointer">
-                  <input type="radio" name="book status" value="READING" className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"/>
+                  <input 
+                    type="radio" 
+                    name="book status" 
+                    value="READING" 
+                    className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                  />
                   Reading
                 </label>
                 <label className="flex items-center gap-x-3 text-[18px] cursor-pointer">
-                  <input type="radio" name="book status" value="FINISHED" className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"/>
+                  <input 
+                    type="radio" 
+                    name="book status" 
+                    value="FINISHED" 
+                    className="form-radio h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                  />
                   Finished
                 </label>
               </div>

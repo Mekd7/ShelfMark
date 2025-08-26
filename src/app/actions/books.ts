@@ -21,56 +21,56 @@ export type FormState = {
 }
 
 //server action to create book
-export async function CreateBook(prevState: FormState,formdata: FormData) {
-    const errors: Errors = {}
+// server action to create book
+export async function CreateBook(prevState: FormState, formdata: FormData) {
+    const errors: Errors = {};
+    const { userId } = await auth();
 
-    const {userId} = await auth();
-
-    if(!userId){
-    return {
-        errors: {_form: "You must be logged in to add a book."}
-    };
-}
+    if (!userId) {
+        return { errors: { _form: "You must be logged in to add a book." } };
+    }
  
     const bookName = formdata.get('book name') as string;
     const authorName = formdata.get('author name') as string;
     const status = formdata.get('book status') as BookStatus;
     const coverImage = formdata.get("coverImage") as File;
 
-    if(!bookName){
-        errors.bookName = "Book Name required!"
-    }
-    if(!authorName){
-        errors.authorName = "Author Name required!"
-    }
-    if(!status){
-        errors.status = "Book Status required!"
+    if (!bookName) errors.bookName = "Book Name required!";
+    if (!authorName) errors.authorName = "Author Name required!";
+    if (!status) errors.status = "Book Status required!";
+
+    if (Object.keys(errors).length > 0) {
+        return { errors };
     }
 
-    if(Object.keys(errors).length > 0){
-        return {errors};
-    }
+    let imageUrl: string | null = null;
+    let newBook;
 
-     let imageUrl: string | null = null;
-     if (coverImage && coverImage.size > 0) {
-        try {
-            const { url } = await put(coverImage.name, coverImage, {
+    try {
+        // Step 1: Create the book record first without the image URL.
+        newBook = await addBook(userId, bookName, authorName, null, status);
+        
+        // Step 2: If a cover image was provided, upload it using the new book's ID.
+        if (coverImage && coverImage.size > 0) {
+            // Generate a unique filename using the book ID
+            const filename = `${newBook.id}-${coverImage.name}`;
+            const { url } = await put(filename, coverImage, {
                 access: "public",
             });
             imageUrl = url;
-        } catch {
-            return { errors: { _form: "Failed to upload image." } };
-    }
-  }
 
-    try{
-        await addBook(userId, bookName, authorName, imageUrl, status )
-    }catch(err){
-        if(err instanceof Error){
-            return {errors: {_form: err.message}}
+            // Step 3: Update the book record with the image URL.
+            // You will need a new function like `updateBookImageUrl`.
+            await prisma.book.update({
+                where: { id: newBook.id },
+                data: { coverImg: imageUrl },
+            });
         }
-        else{
-            return {errors: {_form: "Something went wrong."}}   
+    } catch (err) {
+        if (err instanceof Error) {
+            return { errors: { _form: err.message } };
+        } else {
+            return { errors: { _form: "Something went wrong." } };
         }
     }
 
@@ -96,6 +96,7 @@ export async function EditBookAction(id: string, prevState: FormState, formdata:
     const authorName = formdata.get('author name') as string;
     const status = formdata.get('book status') as BookStatus;
     const coverImage = formdata.get("coverImage") as File;
+    
 
     
     const errors: Errors = {}
